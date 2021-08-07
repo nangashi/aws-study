@@ -1,0 +1,41 @@
+{
+    "version": "0",
+    "id": "250563ed-0dad-b7dc-5ee7-b7537873aa8e",
+    "detail-type": "AWS Console Sign In via CloudTrail",
+    "source": "aws.signin",
+    "account": "999999",
+    "time": "2021-07-17T14:50:24Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.08",
+        "userIdentity": {
+            "type": "IAMUser",
+            "principalId": "AIDAVS3IDWMTHTX3GJYBS",
+            "arn": "arn:aws:iam::999999:user/test",
+            "accountId": "999999",
+            "userName": "nomfa-user"
+        },
+        "eventTime": "2021-07-17T14:50:24Z",
+        "eventSource": "signin.amazonaws.com",
+        "eventName": "ConsoleLogin",
+        "awsRegion": "global",
+        "sourceIPAddress": "118.158.39.83",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67",
+        "requestParameters": null,
+        "responseElements": {
+            "ConsoleLogin": "Success"
+        },
+        "additionalEventData": {
+            "LoginTo": "https://console.aws.amazon.com/console/home?fromtb=true&hashArgs=%23&isauthcode=true&state=hashArgsFromTB_us-east-1_85003004d786ecfb",
+            "MobileVersion": "No",
+            "MFAUsed": "No"
+        },
+        "eventID": "d7c932f7-1f12-4556-bacb-e04759b85055",
+        "readOnly": false,
+        "eventType": "AwsConsoleSignIn",
+        "managementEvent": true,
+        "recipientAccountId": "999999",
+        "eventCategory": "Management"
+    }
+}

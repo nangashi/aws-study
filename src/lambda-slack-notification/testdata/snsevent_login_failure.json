@@ -1,0 +1,42 @@
+{
+    "version": "0",
+    "id": "7b0535bf-b670-8b97-6477-898e8b12a757",
+    "detail-type": "AWS Console Sign In via CloudTrail",
+    "source": "aws.signin",
+    "account": "999999",
+    "time": "2021-07-17T14:25:02Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.08",
+        "userIdentity": {
+            "type": "IAMUser",
+            "principalId": "AIDAVS3IDWMTHGQ7XUWJK",
+            "accountId": "999999",
+            "accessKeyId": "",
+            "userName": "failure-user"
+        },
+        "eventTime": "2021-07-17T14:25:02Z",
+        "eventSource": "signin.amazonaws.com",
+        "eventName": "ConsoleLogin",
+        "awsRegion": "global",
+        "sourceIPAddress": "118.158.39.83",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67",
+        "errorMessage": "Failed authentication",
+        "requestParameters": null,
+        "responseElements": {
+            "ConsoleLogin": "Failure"
+        },
+        "additionalEventData": {
+            "LoginTo": "https://console.aws.amazon.com/console/home?fromtb=true&hashArgs=%23&isauthcode=true&state=hashArgsFromTB_us-east-1_29649b774d228cc0",
+            "MobileVersion": "No",
+            "MFAUsed": "Yes"
+        },
+        "eventID": "cb370834-7abc-43a6-af46-94a7e4ce52cd",
+        "readOnly": false,
+        "eventType": "AwsConsoleSignIn",
+        "managementEvent": true,
+        "recipientAccountId": "999999",
+        "eventCategory": "Management"
+    }
+}
