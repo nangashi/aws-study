@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"project1/src/common/aws"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/comail/colog"
 	"github.com/slack-go/slack"
-)
-
-var (
-	webhookUrl = "https://hooks.slack.com/services/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"
 )
 
 type ConsoleLoginEvent struct {
@@ -89,7 +86,12 @@ func handler(context context.Context, event events.SNSEvent) error {
 			}
 		}
 
-		slack.PostWebhook(webhookUrl, &slack.WebhookMessage{
+		secrets, err := aws.GetSlackSecrets()
+		if err != nil {
+			log.Println("error: failed to get secrets: ", err)
+			return err
+		}
+		slack.PostWebhook(secrets.NotificationWebhookURL, &slack.WebhookMessage{
 			Username: "AWSログイン通知",
 			Text:     text,
 			Attachments: []slack.Attachment{

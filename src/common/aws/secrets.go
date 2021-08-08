@@ -1,4 +1,4 @@
-package main
+package aws
 
 import (
 	"encoding/json"
@@ -8,16 +8,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 )
 
-type Secrets struct {
-	Token         string
-	SigningSecret string
+const (
+	SLACK_SECRET_NAME   = "SlackSecret"
+	SLACK_SECRET_REGION = "ap-northeast-1"
+)
+
+type SlackSecrets struct {
+	Token                  string
+	SigningSecret          string
+	NotificationWebhookURL string
 }
 
-func GetSecrets() (*Secrets, error) {
+func GetSlackSecrets() (*SlackSecrets, error) {
 	sess := session.Must(session.NewSession())
-	svc := secretsmanager.New(sess, aws.NewConfig().WithRegion(SECRET_REGION))
+	svc := secretsmanager.New(sess, aws.NewConfig().WithRegion(SLACK_SECRET_REGION))
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId:     aws.String(SECRET_NAME),
+		SecretId:     aws.String(SLACK_SECRET_NAME),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 	result, err := svc.GetSecretValue(input)
@@ -30,8 +36,9 @@ func GetSecrets() (*Secrets, error) {
 		return nil, err
 	}
 	// log.Printf("%T型\n%[1]v\n", res)
-	s := new(Secrets)
+	s := new(SlackSecrets)
 	s.Token = res["Token"].(string)
 	s.SigningSecret = res["SigningSecret"].(string)
+	s.NotificationWebhookURL = res["NotificationWebhookURL"].(string)
 	return s, nil
 }

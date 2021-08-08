@@ -1,7 +1,7 @@
 # ビルドイメージ
 ARG GO_IMAGE=1.16-buster
 # ビルド対象モジュール（デフォルト）
-ARG MODULE=lambda1
+ARG MODULE
 
 # ===== ビルド =====
 FROM golang:$GO_IMAGE as build-image
@@ -13,9 +13,9 @@ COPY go.mod .
 RUN go mod download
 
 # ソースコピー
-COPY src/common common
-COPY src/$MODULE $MODULE
-WORKDIR $MODULE
+COPY src/common src/common
+COPY src/$MODULE src/$MODULE
+WORKDIR src/$MODULE
 
 # ビルド
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \

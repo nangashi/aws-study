@@ -38,6 +38,25 @@ define MAKEFILE_LAMBDA_POLICY
             "Resource": [
                 "arn:aws:logs:$(AWS_REGION):$(AWS_ACCOUNT):log-group:/aws/lambda/$(LAMBDA_FUNCTION):*"
             ]
+        },
+		{
+			"Effect": "Allow",
+			"Action": [
+				"secretsmanager:GetSecretValue",
+				"secretsmanager:ListSecrets",
+				"secretsmanager:DescribeSecret"
+			],
+			"Resource": [
+				"arn:aws:secretsmanager:ap-northeast-1:384081048358:secret:SlackSecret-Vzss8J"
+			]
+		},
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sns:GetTopicAttributes",
+                "sns:List*"
+            ],
+            "Resource": "*"
         }
     ]
 }
@@ -60,7 +79,7 @@ build:
 	docker push $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)
 
 update-lambda-function:
-	@echo "current lambda image URI: $(shell aws lambda get-function --function-name Slack-Notification | jq -r .Code.ImageUri)" && \
+	@echo "current lambda image URI: $(shell aws lambda get-function --function-name $(LAMBDA_FUNCTION) | jq -r .Code.ImageUri)" && \
 	aws lambda update-function-code --function-name "$(LAMBDA_FUNCTION)" --image-uri $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)
 
 create-lambda-function:
@@ -73,7 +92,7 @@ endif
 		aws iam create-role --role-name "Lambda$(LAMBDA_FUNCTION)" --assume-role-policy-document "$$MAKEFILE_LAMBDA_ASSUME_ROLE_JSON") && \
 	echo "Create Policy..." && \
 	MAKEFILE_POLICY=`(aws iam list-policies | jq '.Policies[] | select(.PolicyName == "Lambda$(LAMBDA_FUNCTION)")' -e || \
-		aws iam create-policy --policy-name "Lambda$(LAMBDA_FUNCTION)" --policy-document "$$MAKEFILE_LAMBDA_POLICY")` && \
+		aws iam create-policy --policy-name "Lambda$(LAMBDA_FUNCTION)" --policy-document "$$MAKEFILE_LAMBDA_POLICY" | jq '.Policy')` && \
 	echo "$$MAKEFILE_POLICY" && \
 	MAKEFILE_POLICY_ARN=`echo $$MAKEFILE_POLICY | jq '.Arn' -r` && \
 	echo "Attach Policy..." && \

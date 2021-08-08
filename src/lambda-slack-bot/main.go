@@ -6,17 +6,13 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"project1/src/common/aws"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/comail/colog"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
-)
-
-const (
-	SECRET_NAME   = "SlackSecret"
-	SECRET_REGION = "ap-northeast-1"
 )
 
 func main() {
@@ -29,7 +25,7 @@ func main() {
 }
 
 func handler(context context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	secrets, err := GetSecrets()
+	secrets, err := aws.GetSlackSecrets()
 	if err != nil {
 		return respond(http.StatusInternalServerError, err)
 	}
