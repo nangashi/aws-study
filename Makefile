@@ -9,8 +9,8 @@ define MAKEFILE_LAMBDA_ASSUME_ROLE_JSON
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Action": "sts:AssumeRole",
             "Effect": "Allow",
+            "Action": "sts:AssumeRole",
             "Principal": {
                 "Service": "lambda.amazonaws.com"
             }
@@ -47,7 +47,7 @@ define MAKEFILE_LAMBDA_POLICY
 				"secretsmanager:DescribeSecret"
 			],
 			"Resource": [
-				"arn:aws:secretsmanager:ap-northeast-1:384081048358:secret:SlackSecret-Vzss8J"
+				"arn:aws:secretsmanager:$(AWS_REGION):$(AWS_ACCOUNT):secret:SlackSecret-Vzss8J"
 			]
 		},
         {
@@ -63,7 +63,7 @@ define MAKEFILE_LAMBDA_POLICY
 endef
 export MAKEFILE_LAMBDA_POLICY
 
-check-parameter:
+non-parameter:
 ifndef PACKAGE
 		@echo variable PACKAGE is not defined.
 		@exit 1
@@ -72,42 +72,55 @@ endif
 
 .PHONY: build
 build:
-	@echo $(PACKAGE) $(AWS_ECR_REPOSITORY_BASE) && \
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE) && \
 	docker build -t $(PACKAGE):$(TAG) --build-arg MODULE=$(PACKAGE) . && \
 	docker tag $(PACKAGE):$(TAG) $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG) && \
 	docker push $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)
 
 update-lambda-function:
-	@echo "current lambda image URI: $(shell aws lambda get-function --function-name $(LAMBDA_FUNCTION) | jq -r .Code.ImageUri)" && \
+	@echo "* update lambda function..."
+	@echo "* current lambda image URI: $(shell aws lambda get-function --function-name $(LAMBDA_FUNCTION) | jq -r .Code.ImageUri)"
 	aws lambda update-function-code --function-name "$(LAMBDA_FUNCTION)" --image-uri $(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)
+	@echo "done."
 
 create-lambda-function:
 ifndef LAMBDA_FUNCTION
 		@echo variable PACKAGE is not defined.
 		@exit 1
 endif
-	@echo "Create Role..." && \
-	(aws iam get-role --role-name "Lambda$(LAMBDA_FUNCTION)" || \
-		aws iam create-role --role-name "Lambda$(LAMBDA_FUNCTION)" --assume-role-policy-document "$$MAKEFILE_LAMBDA_ASSUME_ROLE_JSON") && \
-	echo "Create Policy..." && \
-	MAKEFILE_POLICY=`(aws iam list-policies | jq '.Policies[] | select(.PolicyName == "Lambda$(LAMBDA_FUNCTION)")' -e || \
-		aws iam create-policy --policy-name "Lambda$(LAMBDA_FUNCTION)" --policy-document "$$MAKEFILE_LAMBDA_POLICY" | jq '.Policy')` && \
-	echo "$$MAKEFILE_POLICY" && \
+	@echo "* checking role..."
+	aws iam get-role --role-name "Lambda$(LAMBDA_FUNCTION)" > /dev/null 2>&1 && echo "* role is already created." || \
+		(echo "* role is not created. creating..." && \
+		aws iam create-role --role-name "Lambda$(LAMBDA_FUNCTION)" --assume-role-policy-document "$$MAKEFILE_LAMBDA_ASSUME_ROLE_JSON" && \
+		echo "* done.")
+
+	@echo "* checking policy..."
+	MAKEFILE_POLICY=`aws iam list-policies | jq '.Policies[] | select(.PolicyName == "Lambda$(LAMBDA_FUNCTION)")' -e` && echo "* policy is already created." || \
+		MAKEFILE_POLICY=`aws iam create-policy --policy-name "Lambda$(LAMBDA_FUNCTION)" --policy-document "$$MAKEFILE_LAMBDA_POLICY" | jq '.Policy'` &&\
 	MAKEFILE_POLICY_ARN=`echo $$MAKEFILE_POLICY | jq '.Arn' -r` && \
-	echo "Attach Policy..." && \
-	(aws iam list-attached-role-policies --role-name "Lambda$(LAMBDA_FUNCTION)" | jq '.AttachedPolicies[] | select(.PolicyName == "Lambda$(LAMBDA_FUNCTION)")' -e || \
-		aws iam attach-role-policy --role-name "Lambda$(LAMBDA_FUNCTION)" --policy-arn "$$MAKEFILE_POLICY_ARN") && \
-	echo "Create Lambda Function..." && \
-	(aws lambda get-function --function-name "$(LAMBDA_FUNCTION)" || \
-		aws lambda create-function --function-name "$(LAMBDA_FUNCTION)" --role "$(shell aws iam get-role --role-name "Lambda$(LAMBDA_FUNCTION)" | jq '.Role.Arn' -r)" --region "$(AWS_REGION)" --package-type "Image" --code "ImageUri=$(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)")
+	aws iam list-attached-role-policies --role-name "Lambda$(LAMBDA_FUNCTION)" | jq '.AttachedPolicies[] | select(.PolicyName == "Lambda$(LAMBDA_FUNCTION)")' -e && echo "* policy is already attached to role." || \
+		(echo "* attach policy to role..." && \
+		aws iam attach-role-policy --role-name "Lambda$(LAMBDA_FUNCTION)" --policy-arn "$$MAKEFILE_POLICY_ARN" && \
+		echo "* done")
+
+	@echo "* checking lambda function..."
+	aws lambda get-function --function-name "$(LAMBDA_FUNCTION)" && echo "* lambda function is already created." || \
+		(echo "* lambda function is not created. creating..." && \
+		aws lambda create-function --function-name "$(LAMBDA_FUNCTION)" --role "$(shell aws iam get-role --role-name "Lambda$(LAMBDA_FUNCTION)" | jq '.Role.Arn' -r)" --region "$(AWS_REGION)" --package-type "Image" --code "ImageUri=$(AWS_ECR_REPOSITORY_BASE)/$(PACKAGE):$(TAG)" && \
+		echo "* done.")
+
+	@echo "* add permission."
+	-aws lambda add-permission --function-name arn:aws:lambda:$(AWS_REGION):$(AWS_ACCOUNT):function:$(LAMBDA_FUNCTION) --source-arn arn:aws:execute-api:$(AWS_REGION):$(AWS_ACCOUNT):imj0a2qi30/*/POST/ --principal apigateway.amazonaws.com --statement-id FromAPIGateway --action lambda:InvokeFunction
 
 create-ecr-repository:
 ifndef PACKAGE
 		@echo variable PACKAGE is not defined.
 		@exit 1
 endif
-	@(echo "Create ECR Repository..." && aws ecr describe-repositories | jq '.repositories[] | select(.repositoryName == "$(PACKAGE)")' -e || \
-		aws ecr create-repository --repository-name "$(PACKAGE)" --image-tag-mutability IMMUTABLE)
+	@echo "* cheking ecr repository..."
+	aws ecr describe-repositories | jq '.repositories[] | select(.repositoryName == "$(PACKAGE)")' -e && echo "* ecr repository is already created." || \
+		(echo "* ecr repository is not created. creating..." && \
+		aws ecr create-repository --repository-name "$(PACKAGE)" --image-tag-mutability IMMUTABLE && \
+		echo "* done.")
 
 
