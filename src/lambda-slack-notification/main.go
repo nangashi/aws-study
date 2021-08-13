@@ -17,6 +17,7 @@ import (
 type ConsoleLoginEvent struct {
 	UserIdentity struct {
 		UserName string `json:"userName"`
+		Type     string `json:"type"`
 	} `json:"userIdentity"`
 	EventTime        time.Time `json:"eventTime"`
 	EventName        string    `json:"eventName"`
@@ -68,15 +69,24 @@ func handler(context context.Context, event events.SNSEvent) error {
 
 		isMFAUsed := login.AdditionalEventData.MFAUsed == "Yes"
 		isLoginSuccess := login.ResponseElements.ConsoleLogin == "Success"
+		isRoot := login.UserIdentity.Type == "Root"
 
 		level := 0
 		var text string
 		color := map[int]string{0: "good", 1: "warning", 2: "danger"}
 
 		if isLoginSuccess {
-			text = fmt.Sprintf("AWSアカウント %s へのログインがありました。", cloudwatch.AccountID)
+			var mention string
+			if isRoot {
+				mention = "<!channel> "
+			}
+			text = fmt.Sprintf("%sAWSアカウント %s へのログインがありました。", mention, cloudwatch.AccountID)
 		} else {
 			text = fmt.Sprintf("<!channel> AWSアカウント %s へのログイン失敗が検知されました。", cloudwatch.AccountID)
+			level = 2
+		}
+		if isRoot {
+			text += "\nRootアカウントによるログインです。"
 			level = 2
 		}
 		if !isMFAUsed {

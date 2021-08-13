@@ -1,0 +1,41 @@
+{
+  "version": "0",
+  "id": "51e87b48-6b3c-11f8-b887-a7d99e317a6f",
+  "detail-type": "AWS Console Sign In via CloudTrail",
+  "source": "aws.signin",
+  "account": "999999",
+  "time": "2021-08-12T14:23:55Z",
+  "region": "us-east-1",
+  "resources": [],
+  "detail": {
+    "eventVersion": "1.08",
+    "userIdentity": {
+      "type": "Root",
+      "principalId": "999999",
+      "arn": "arn:aws:iam::999999:root",
+      "accountId": "999999",
+      "accessKeyId": ""
+    },
+    "eventTime": "2021-08-12T14:23:55Z",
+    "eventSource": "signin.amazonaws.com",
+    "eventName": "ConsoleLogin",
+    "awsRegion": "global",
+    "sourceIPAddress": "118.158.39.83",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
+    "requestParameters": null,
+    "responseElements": {
+      "ConsoleLogin": "Success"
+    },
+    "additionalEventData": {
+      "LoginTo": "https://console.aws.amazon.com/console/home?\u0026hashArgs=%23\\-east-1_09f561ecb2846af3",
+      "MobileVersion": "No",
+      "MFAUsed": "Yes"
+    },
+    "eventID": "ea6378f4-0994-4429-b8e5-65d2da3403e0",
+    "readOnly": false,
+    "eventType": "AwsConsoleSignIn",
+    "managementEvent": true,
+    "recipientAccountId": "999999",
+    "eventCategory": "Management"
+  }
+}
